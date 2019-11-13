@@ -2,6 +2,7 @@ namespace DotNet.Testcontainers.Tests.Unit.Containers
 {
   using System;
   using System.Threading.Tasks;
+  using DotNet.Testcontainers.Client;
   using Testcontainers.Containers.WaitStrategies;
   using Xunit;
 
@@ -24,7 +25,7 @@ namespace DotNet.Testcontainers.Tests.Unit.Containers
           callCounter += 1;
           return false;
         }, maxCallCount);
-        await WaitStrategy.WaitUntil(() => wait.Until(null, string.Empty));
+        await WaitStrategy.WaitUntil(() => wait.Until(DockerApiEndpoint.LocalEndpoint, string.Empty));
       });
       Assert.Equal(expectedCallsCount, callCounter);
     }
@@ -42,7 +43,7 @@ namespace DotNet.Testcontainers.Tests.Unit.Containers
     {
       var callCounter = 0;
       var wait = new WaitUntilOperationSucceeds(() => ++callCounter >= expectedCallsCount, maxCallCount);
-      await WaitStrategy.WaitUntil(() => wait.Until(null, string.Empty));
+      await WaitStrategy.WaitUntil(() => wait.Until(DockerApiEndpoint.LocalEndpoint, string.Empty));
       Assert.Equal(expectedCallsCount, callCounter);
     }
   }
