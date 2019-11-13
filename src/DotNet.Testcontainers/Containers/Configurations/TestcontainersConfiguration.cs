@@ -1,7 +1,9 @@
 namespace DotNet.Testcontainers.Containers.Configurations
 {
+  using System;
   using System.Collections.Generic;
   using System.Linq;
+  using Client;
   using DotNet.Testcontainers.Containers.Builders;
   using DotNet.Testcontainers.Containers.OutputConsumers;
   using DotNet.Testcontainers.Containers.WaitStrategies;
@@ -11,6 +13,8 @@ namespace DotNet.Testcontainers.Containers.Configurations
   /// </summary>
   public sealed class TestcontainersConfiguration
   {
+    private static readonly Uri DefaultDockerApiEndpoint = DockerApiEndpoint.LocalEndpoint;
+
     private static readonly IOutputConsumer DefaultOutputConsumer = new OutputConsumerNull();
 
     private static readonly IWaitUntil DefaultWaitStrategy = new WaitUntilContainerIsRunning();
@@ -20,6 +24,8 @@ namespace DotNet.Testcontainers.Containers.Configurations
     public HostConfiguration Host { get; set; } = new HostConfiguration();
 
     public bool CleanUp { get; set; } = true;
+
+    public Uri Endpoint { get; set; } = DefaultDockerApiEndpoint;
 
     public IOutputConsumer OutputConsumer { get; set; } = DefaultOutputConsumer;
 
@@ -53,6 +59,8 @@ namespace DotNet.Testcontainers.Containers.Configurations
       this.Host.Mounts = Merge(this.Host.Mounts, old.Host.Mounts);
 
       this.CleanUp = this.CleanUp && old.CleanUp;
+
+      this.Endpoint = Merge(this.Endpoint, old.Endpoint, DefaultDockerApiEndpoint);
 
       this.OutputConsumer = Merge(this.OutputConsumer, old.OutputConsumer, DefaultOutputConsumer);
 

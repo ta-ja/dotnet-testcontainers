@@ -1,5 +1,6 @@
 namespace DotNet.Testcontainers.Containers.WaitStrategies
 {
+  using System;
   using System.IO;
   using System.Linq;
   using System.Text;
@@ -18,9 +19,9 @@ namespace DotNet.Testcontainers.Containers.WaitStrategies
       this.messages = messages;
     }
 
-    public override async Task<bool> Until(string id)
+    public override async Task<bool> Until(Uri endpoint, string id)
     {
-      await WaitStrategy.WaitUntil(() => base.Until(id));
+      await WaitStrategy.WaitUntil(() => base.Until(endpoint, id));
 
       this.outputConsumerStream.Seek(0, SeekOrigin.Begin);
 

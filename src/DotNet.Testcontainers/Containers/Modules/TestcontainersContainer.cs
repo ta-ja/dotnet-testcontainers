@@ -24,7 +24,8 @@ namespace DotNet.Testcontainers.Containers.Modules
 
     internal TestcontainersContainer(TestcontainersConfiguration configuration)
     {
-      this.Configuration = configuration;
+      this.TestcontainersClient = new TestcontainersClient(configuration.Endpoint);
+      this.TestcontainersConfiguration = configuration;
     }
 
     ~TestcontainersContainer()
@@ -89,7 +90,9 @@ namespace DotNet.Testcontainers.Containers.Modules
       }
     }
 
-    private TestcontainersConfiguration Configuration { get; }
+    private ITestcontainersClient TestcontainersClient { get; }
+
+    private TestcontainersConfiguration TestcontainersConfiguration { get; }
 
     public ushort GetMappedPublicPort(int privatePort)
     {
@@ -109,7 +112,7 @@ namespace DotNet.Testcontainers.Containers.Modules
 
     public Task<long> GetExitCode()
     {
-      return DockerApiClientContainer.Instance.GetExitCode(this.Id);
+      return this.TestcontainersClient.DockerContainerClient.GetExitCode(this.Id);
     }
 
     public async Task StartAsync()
@@ -118,7 +121,7 @@ namespace DotNet.Testcontainers.Containers.Modules
 
       await this.Start();
 
-      this.container = await DockerApiClientContainer.Instance.ByIdAsync(this.Id);
+      this.container = await this.TestcontainersClient.DockerContainerClient.ByIdAsync(this.Id);
     }
 
     public async Task StopAsync()
@@ -139,7 +142,7 @@ namespace DotNet.Testcontainers.Containers.Modules
         return;
       }
 
-      var cleanOrStopTask = this.Configuration.CleanUp ? this.CleanUp() : this.Stop();
+      var cleanOrStopTask = this.TestcontainersConfiguration.CleanUp ? this.CleanUp() : this.Stop();
       cleanOrStopTask.GetAwaiter().GetResult();
 
       this.disposed = true;
@@ -149,7 +152,7 @@ namespace DotNet.Testcontainers.Containers.Modules
     {
       if (!this.HasId)
       {
-        this.id = await TestcontainersClient.Instance.RunAsync(this.Configuration);
+        this.id = await this.TestcontainersClient.RunAsync(this.TestcontainersConfiguration);
       }
     }
 
@@ -159,11 +162,11 @@ namespace DotNet.Testcontainers.Containers.Modules
       {
         using (var cts = new CancellationTokenSource())
         {
-          var attachConsumerTask = TestcontainersClient.Instance.AttachAsync(this.Id, this.Configuration.OutputConsumer, cts.Token);
+          var attachConsumerTask = this.TestcontainersClient.AttachAsync(this.Id, this.TestcontainersConfiguration.OutputConsumer, cts.Token);
 
-          var startTask = TestcontainersClient.Instance.StartAsync(this.Id, cts.Token);
+          var startTask = this.TestcontainersClient.StartAsync(this.Id, cts.Token);
 
-          var waitTask = WaitStrategy.WaitUntil(() => this.Configuration.WaitStrategy.Until(this.Id), ct: cts.Token);
+          var waitTask = WaitStrategy.WaitUntil(() => this.TestcontainersConfiguration.WaitStrategy.Until(this.TestcontainersConfiguration.Endpoint, this.Id), ct: cts.Token);
 
           var handleDockerExceptionTask = startTask.ContinueWith(task =>
           {
@@ -183,7 +186,7 @@ namespace DotNet.Testcontainers.Containers.Modules
     {
       if (this.HasId)
       {
-        await TestcontainersClient.Instance.StopAsync(this.Id);
+        await this.TestcontainersClient.StopAsync(this.Id);
 
         this.container = null;
       }
@@ -193,7 +196,7 @@ namespace DotNet.Testcontainers.Containers.Modules
     {
       if (this.HasId)
       {
-        await TestcontainersClient.Instance.RemoveAsync(this.Id);
+        await this.TestcontainersClient.RemoveAsync(this.Id);
 
         this.container = null;
         this.id = null;

@@ -5,7 +5,7 @@ namespace DotNet.Testcontainers.Containers.Builders
   using DotNet.Testcontainers.Containers.WaitStrategies;
   using DotNet.Testcontainers.Images;
 
-  public interface ITestcontainersBuilder<T>
+  public interface ITestcontainersBuilder<out T>
   {
     ITestcontainersBuilder<T> ConfigureContainer(Action<T> moduleConfiguration);
 
@@ -127,6 +127,13 @@ namespace DotNet.Testcontainers.Containers.Builders
     /// <param name="cleanUp">True, Testcontainer will remove the Testcontainer on finalize. Otherwise, Testcontainer will keep it.</param>
     /// <returns>A configured instance of <see cref="ITestcontainersBuilder{T}"/>.</returns>
     ITestcontainersBuilder<T> WithCleanUp(bool cleanUp);
+
+    /// <summary>
+    /// Sets the Docker API endpoint.
+    /// </summary>
+    /// <param name="endpoint">Docker API endpoint.</param>
+    /// <returns>A configured instance of <see cref="ITestcontainersBuilder{T}"/>.</returns>
+    ITestcontainersBuilder<T> WithDockerEndpoint(string endpoint);
 
     /// <summary>
     /// Sets the output consumer to capture the Testcontainer stdout and stderr messages.

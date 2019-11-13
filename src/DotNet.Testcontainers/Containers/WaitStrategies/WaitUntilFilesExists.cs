@@ -1,5 +1,6 @@
 namespace DotNet.Testcontainers.Containers.WaitStrategies
 {
+  using System;
   using System.IO;
   using System.Linq;
   using System.Threading.Tasks;
@@ -13,9 +14,9 @@ namespace DotNet.Testcontainers.Containers.WaitStrategies
       this.files = files;
     }
 
-    public override async Task<bool> Until(string id)
+    public override async Task<bool> Until(Uri endpoint, string id)
     {
-      await WaitStrategy.WaitUntil(() => base.Until(id));
+      await WaitStrategy.WaitUntil(() => base.Until(endpoint, id));
       return this.files.All(File.Exists);
     }
   }

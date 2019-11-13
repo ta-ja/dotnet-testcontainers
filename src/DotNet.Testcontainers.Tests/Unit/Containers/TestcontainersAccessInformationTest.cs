@@ -14,25 +14,25 @@ namespace DotNet.Testcontainers.Tests.Unit.Containers
       [Fact]
       public async Task QueryNotExistingDockerImageById()
       {
-        Assert.False(await DockerApiClientImage.Instance.ExistsWithIdAsync(string.Empty));
+        Assert.False(await new DockerApiClientImage().ExistsWithIdAsync(string.Empty));
       }
 
       [Fact]
       public async Task QueryNotExistingDockerContainerById()
       {
-        Assert.False(await DockerApiClientContainer.Instance.ExistsWithIdAsync(string.Empty));
+        Assert.False(await new DockerApiClientContainer().ExistsWithIdAsync(string.Empty));
       }
 
       [Fact]
       public async Task QueryNotExistingDockerImageByName()
       {
-        Assert.False(await DockerApiClientImage.Instance.ExistsWithNameAsync(string.Empty));
+        Assert.False(await new DockerApiClientImage().ExistsWithNameAsync(string.Empty));
       }
 
       [Fact]
       public async Task QueryNotExistingDockerContainerByName()
       {
-        Assert.False(await DockerApiClientContainer.Instance.ExistsWithNameAsync(string.Empty));
+        Assert.False(await new DockerApiClientContainer().ExistsWithNameAsync(string.Empty));
       }
 
       [Fact]

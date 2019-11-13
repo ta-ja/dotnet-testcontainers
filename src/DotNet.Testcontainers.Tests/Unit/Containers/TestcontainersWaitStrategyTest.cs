@@ -12,21 +12,21 @@ namespace DotNet.Testcontainers.Tests.Unit.Containers
       [Fact]
       public async Task UntilImmediately()
       {
-        await WaitStrategy.WaitUntil(() => this.Until(string.Empty));
+        await WaitStrategy.WaitUntil(() => this.Until(null, string.Empty));
       }
 
       [Fact]
       public async Task WhileImmediately()
       {
-        await WaitStrategy.WaitWhile(() => this.While(string.Empty));
+        await WaitStrategy.WaitWhile(() => this.While(null, string.Empty));
       }
 
-      public Task<bool> Until(string id)
+      public Task<bool> Until(Uri endpoint, string id)
       {
         return Task.Run(() => true);
       }
 
-      public Task<bool> While(string id)
+      public Task<bool> While(Uri endpoint, string id)
       {
         return Task.Run(() => false);
       }
@@ -35,30 +35,30 @@ namespace DotNet.Testcontainers.Tests.Unit.Containers
     public class Timeout : IWaitUntil, IWaitWhile
     {
       [Fact]
-      public async Task UntilAfter1ms()
+      public async Task UntilAfter1Ms()
       {
         await Assert.ThrowsAsync<TimeoutException>(async () =>
         {
-          await WaitStrategy.WaitUntil(() => this.Until(string.Empty), timeout: 1);
+          await WaitStrategy.WaitUntil(() => this.Until(null, string.Empty), timeout: 1);
         });
       }
 
       [Fact]
-      public async Task WhileAfter1ms()
+      public async Task WhileAfter1Ms()
       {
         await Assert.ThrowsAsync<TimeoutException>(async () =>
         {
-          await WaitStrategy.WaitWhile(() => this.While(string.Empty), timeout: 1);
+          await WaitStrategy.WaitWhile(() => this.While(null, string.Empty), timeout: 1);
         });
       }
 
-      public async Task<bool> Until(string id)
+      public async Task<bool> Until(Uri endpoint, string id)
       {
         await Task.Delay(TimeSpan.FromSeconds(1));
         return true;
       }
 
-      public async Task<bool> While(string id)
+      public async Task<bool> While(Uri endpoint, string id)
       {
         await Task.Delay(TimeSpan.FromSeconds(1));
         return false;
@@ -72,7 +72,7 @@ namespace DotNet.Testcontainers.Tests.Unit.Containers
       {
         await Assert.ThrowsAsync<NotImplementedException>(async () =>
         {
-          await WaitStrategy.WaitUntil(() => this.Until(string.Empty));
+          await WaitStrategy.WaitUntil(() => this.Until(null, string.Empty));
         });
       }
 
@@ -81,16 +81,16 @@ namespace DotNet.Testcontainers.Tests.Unit.Containers
       {
         await Assert.ThrowsAsync<NotImplementedException>(async () =>
         {
-          await WaitStrategy.WaitWhile(() => this.While(string.Empty));
+          await WaitStrategy.WaitWhile(() => this.While(null, string.Empty));
         });
       }
 
-      public Task<bool> Until(string id)
+      public Task<bool> Until(Uri endpoint, string id)
       {
         throw new NotImplementedException();
       }
 
-      public Task<bool> While(string id)
+      public Task<bool> While(Uri endpoint, string id)
       {
         throw new NotImplementedException();
       }

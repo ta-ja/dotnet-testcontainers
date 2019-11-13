@@ -169,6 +169,14 @@ namespace DotNet.Testcontainers.Containers.Builders
       });
     }
 
+    public ITestcontainersBuilder<T> WithDockerEndpoint(string endpoint)
+    {
+      return Build(this, new TestcontainersConfiguration
+      {
+        Endpoint = new Uri(endpoint)
+      });
+    }
+
     public ITestcontainersBuilder<T> WithOutputConsumer(IOutputConsumer outputConsumer)
     {
       return Build(this, new TestcontainersConfiguration

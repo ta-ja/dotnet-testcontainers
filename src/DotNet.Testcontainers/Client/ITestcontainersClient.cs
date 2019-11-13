@@ -10,6 +10,16 @@ namespace DotNet.Testcontainers.Client
   internal interface ITestcontainersClient
   {
     /// <summary>
+    /// Docker API client to access container information.
+    /// </summary>
+    DockerApiClientContainer DockerContainerClient { get; }
+
+    /// <summary>
+    /// Docker API client to access image information.
+    /// </summary>
+    DockerApiClientImage DockerImageClient { get; }
+
+    /// <summary>
     /// Starts a container.
     /// </summary>
     /// <param name="id">Docker container id.</param>

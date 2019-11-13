@@ -33,7 +33,7 @@ namespace DotNet.Testcontainers.Images.Builders
 
     public Task<string> Build()
     {
-      return TestcontainersClient.Instance.BuildAsync(this.configuration);
+      return new TestcontainersClient().BuildAsync(this.configuration);
     }
   }
 }

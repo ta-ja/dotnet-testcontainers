@@ -1,25 +1,30 @@
 namespace DotNet.Testcontainers.Client
 {
+  using System;
   using System.Collections.Generic;
   using System.Threading.Tasks;
 
   internal abstract class AbstractContainerImageClient<T> : DockerApiClient
     where T : class
   {
-    internal abstract Task<IReadOnlyCollection<T>> GetAllAsync();
+    protected AbstractContainerImageClient(Uri endpoint) : base(endpoint)
+    {
+    }
 
-    internal abstract Task<T> ByIdAsync(string id);
+    public abstract Task<IReadOnlyCollection<T>> GetAllAsync();
 
-    internal abstract Task<T> ByNameAsync(string name);
+    public abstract Task<T> ByIdAsync(string id);
 
-    internal abstract Task<T> ByPropertyAsync(string property, string value);
+    public abstract Task<T> ByNameAsync(string name);
 
-    internal async Task<bool> ExistsWithIdAsync(string id)
+    public abstract Task<T> ByPropertyAsync(string property, string value);
+
+    public async Task<bool> ExistsWithIdAsync(string id)
     {
       return !(await this.ByIdAsync(id) is null);
     }
 
-    internal async Task<bool> ExistsWithNameAsync(string name)
+    public async Task<bool> ExistsWithNameAsync(string name)
     {
       return !(await this.ByNameAsync(name) is null);
     }

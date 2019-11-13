@@ -19,15 +19,25 @@ namespace DotNet.Testcontainers.Client
   /// </summary>
   internal class TestcontainersClient : DockerApiClient, ITestcontainersClient
   {
-    private static readonly Lazy<ITestcontainersClient> TestcontainersClientLazy = new Lazy<ITestcontainersClient>(() => new TestcontainersClient());
-
-    private TestcontainersClient()
+    static TestcontainersClient()
     {
       AppDomain.CurrentDomain.ProcessExit += (sender, args) => PurgeOrphanedContainers();
       Console.CancelKeyPress += (sender, args) => PurgeOrphanedContainers();
     }
 
-    internal static ITestcontainersClient Instance { get; } = TestcontainersClientLazy.Value;
+    public TestcontainersClient() : this(DockerApiEndpoint.LocalEndpoint)
+    {
+    }
+
+    public TestcontainersClient(Uri endpoint) : base(endpoint)
+    {
+      this.DockerContainerClient = new DockerApiClientContainer(endpoint);
+      this.DockerImageClient = new DockerApiClientImage(endpoint);
+    }
+
+    public DockerApiClientContainer DockerContainerClient { get; }
+
+    public DockerApiClientImage DockerImageClient { get; }
 
     private static void PurgeOrphanedContainers()
     {
@@ -43,25 +53,25 @@ namespace DotNet.Testcontainers.Client
 
     public async Task StartAsync(string id, CancellationToken ct = default)
     {
-      if (await DockerApiClientContainer.Instance.ExistsWithIdAsync(id))
+      if (await this.DockerContainerClient.ExistsWithIdAsync(id))
       {
-        await Docker.Containers.StartContainerAsync(id, new ContainerStartParameters(), ct);
+        await this.Docker.Containers.StartContainerAsync(id, new ContainerStartParameters(), ct);
       }
     }
 
     public async Task StopAsync(string id, CancellationToken ct = default)
     {
-      if (await DockerApiClientContainer.Instance.ExistsWithIdAsync(id))
+      if (await this.DockerContainerClient.ExistsWithIdAsync(id))
       {
-        await Docker.Containers.StopContainerAsync(id, new ContainerStopParameters { WaitBeforeKillSeconds = 15 }, ct);
+        await this.Docker.Containers.StopContainerAsync(id, new ContainerStopParameters { WaitBeforeKillSeconds = 15 }, ct);
       }
     }
 
     public async Task RemoveAsync(string id, CancellationToken ct = default)
     {
-      if (await DockerApiClientContainer.Instance.ExistsWithIdAsync(id))
+      if (await this.DockerContainerClient.ExistsWithIdAsync(id))
       {
-        await Docker.Containers.RemoveContainerAsync(id, new ContainerRemoveParameters { Force = true }, ct);
+        await this.Docker.Containers.RemoveContainerAsync(id, new ContainerRemoveParameters { Force = true }, ct);
       }
 
       TestcontainersRegistryService.Unregister(id);
@@ -81,18 +91,18 @@ namespace DotNet.Testcontainers.Client
         Stream = true,
       };
 
-      var stream = await Docker.Containers.AttachContainerAsync(id, false, attachParameters, ct);
+      var stream = await this.Docker.Containers.AttachContainerAsync(id, false, attachParameters, ct);
 
       _ = stream.CopyOutputToAsync(Stream.Null, outputConsumer.Stdout, outputConsumer.Stderr, ct);
     }
 
     public async Task<long> ExecAsync(string id, IList<string> command, CancellationToken ct = default)
     {
-      var created = await Docker.Containers.ExecCreateContainerAsync(id, new ContainerExecCreateParameters { Cmd = command, }, ct);
+      var created = await this.Docker.Containers.ExecCreateContainerAsync(id, new ContainerExecCreateParameters { Cmd = command, }, ct);
 
-      await Docker.Containers.StartContainerExecAsync(created.ID, ct);
+      await this.Docker.Containers.StartContainerExecAsync(created.ID, ct);
 
-      for (ContainerExecInspectResponse response; (response = await Docker.Containers.InspectContainerExecAsync(created.ID, ct)) != null;)
+      for (ContainerExecInspectResponse response; (response = await this.Docker.Containers.InspectContainerExecAsync(created.ID, ct)) != null;)
       {
         if (!response.Running)
         {
@@ -107,16 +117,16 @@ namespace DotNet.Testcontainers.Client
     {
       var dockerFileArchive = new DockerfileArchive(config.DockerfileDirectory);
 
-      var imageExists = await DockerApiClientImage.Instance.ExistsWithNameAsync(config.Image);
+      var imageExists = await this.DockerImageClient.ExistsWithNameAsync(config.Image);
 
       if (imageExists && config.DeleteIfExists)
       {
-        await Docker.Images.DeleteImageAsync(config.Image, new ImageDeleteParameters { Force = true }, ct);
+        await this.Docker.Images.DeleteImageAsync(config.Image, new ImageDeleteParameters { Force = true }, ct);
       }
 
       using (var stream = new FileStream(dockerFileArchive.Tar(), FileMode.Open))
       {
-        using (var builtImage = await Docker.Images.BuildImageFromDockerfileAsync(stream, new ImageBuildParameters { Dockerfile = "Dockerfile", Tags = new[] { config.Image } }, ct))
+        using (var builtImage = await this.Docker.Images.BuildImageFromDockerfileAsync(stream, new ImageBuildParameters { Dockerfile = "Dockerfile", Tags = new[] { config.Image } }, ct))
         {
           // New Docker image built, ready to use.
         }
@@ -129,13 +139,13 @@ namespace DotNet.Testcontainers.Client
     {
       var image = config.Container.Image;
 
-      var imageExistsTask = DockerApiClientImage.Instance.ExistsWithNameAsync(image);
+      var imageExistsTask = this.DockerImageClient.ExistsWithNameAsync(image);
 
       var pullImageTask = Task.CompletedTask;
 
       if (!await imageExistsTask)
       {
-        pullImageTask = Docker.Images.CreateImageAsync(new ImagesCreateParameters { FromImage = image }, null, DebugProgress.Instance, ct);
+        pullImageTask = this.Docker.Images.CreateImageAsync(new ImagesCreateParameters { FromImage = image }, null, DebugProgress.Instance, ct);
       }
 
       var name = config.Container.Name;
@@ -179,7 +189,7 @@ namespace DotNet.Testcontainers.Client
 
       await pullImageTask;
 
-      var id = (await Docker.Containers.CreateContainerAsync(createParameters, ct)).ID;
+      var id = (await this.Docker.Containers.CreateContainerAsync(createParameters, ct)).ID;
 
       TestcontainersRegistryService.Register(id, config.CleanUp);
 
